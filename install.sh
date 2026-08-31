@@ -58,17 +58,15 @@ python3 -m venv "$VENV_DIR"
 
 echo
 echo "--- 初期設定 ---"
-# When this installer itself was run as `curl ... | bash`, fd 0 is the pipe
-# carrying the script source, not the keyboard. Force the interactive wizard
-# to read from the real terminal so its prompts don't consume leftover
-# script bytes instead of user input.
-if exec 3</dev/tty 2>/dev/null; then
-  exec 3<&-
-  "$VENV_DIR/bin/python3" "$SRC_DIR/setup_wizard.py" < /dev/tty
-else
-  echo "対話端末が見つかりません。ターミナルから直接 install.sh を実行し直してください。" >&2
+# This script must be run via `bash -c "$(curl -fsSL ...)"` (see header),
+# which fully captures curl's output first -- so fd 0 here is already the
+# real terminal, not a pipe. No stdin redirection needed; adding one (e.g.
+# re-opening /dev/tty) only risks confusing readline's prompt display.
+if [[ ! -t 0 ]]; then
+  echo "対話端末が見つかりません。「bash -c \"\$(curl -fsSL ...)\"」の形式で、対話可能なターミナルから直接実行してください。" >&2
   exit 1
 fi
+"$VENV_DIR/bin/python3" "$SRC_DIR/setup_wizard.py"
 
 echo
 echo "バックグラウンドサービスを登録しています..."
