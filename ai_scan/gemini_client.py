@@ -15,10 +15,17 @@ PROMPT = """あなたは文書解析の専門家です。添付されたPDFド�
 _ACTIVE_WAIT_TIMEOUT_SEC = 120
 _ACTIVE_POLL_INTERVAL_SEC = 2
 
+# Gemini's own SDK already retries within a single request via tenacity, but
+# a sustained outage (observed live: 503 "high demand") can outlast that.
+# Retry a few times at the whole-request level with backoff before giving up.
+_GENERATE_RETRY_ATTEMPTS = 3
+_GENERATE_RETRY_DELAY_SEC = 20
+_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+
 
 def convert_pdf_to_markdown(data: bytes, filename: str, api_key: str, model: str) -> str:
     from google import genai
-    from google.genai import types
+    from google.genai import errors, types
 
     client = genai.Client(api_key=api_key)
     # Upload from an in-memory buffer, not the file path: the caller has
@@ -41,10 +48,18 @@ def convert_pdf_to_markdown(data: bytes, filename: str, api_key: str, model: str
         )
 
     try:
-        response = client.models.generate_content(
-            model=model,
-            contents=[uploaded, PROMPT],
-        )
+        response = None
+        for attempt in range(1, _GENERATE_RETRY_ATTEMPTS + 1):
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=[uploaded, PROMPT],
+                )
+                break
+            except errors.APIError as e:
+                if e.code not in _RETRYABLE_STATUS_CODES or attempt == _GENERATE_RETRY_ATTEMPTS:
+                    raise
+                time.sleep(_GENERATE_RETRY_DELAY_SEC)
     finally:
         try:
             client.files.delete(name=uploaded.name)
