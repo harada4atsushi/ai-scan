@@ -52,7 +52,17 @@ python3 -m venv "$VENV_DIR"
 
 echo
 echo "--- 初期設定 ---"
-"$VENV_DIR/bin/python3" "$SRC_DIR/setup_wizard.py"
+# When this installer itself was run as `curl ... | bash`, fd 0 is the pipe
+# carrying the script source, not the keyboard. Force the interactive wizard
+# to read from the real terminal so its prompts don't consume leftover
+# script bytes instead of user input.
+if exec 3</dev/tty 2>/dev/null; then
+  exec 3<&-
+  "$VENV_DIR/bin/python3" "$SRC_DIR/setup_wizard.py" < /dev/tty
+else
+  echo "対話端末が見つかりません。ターミナルから直接 install.sh を実行し直してください。" >&2
+  exit 1
+fi
 
 echo
 echo "バックグラウンドサービスを登録しています..."

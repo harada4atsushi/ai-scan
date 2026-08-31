@@ -15,7 +15,12 @@ if [[ -f "$PLIST_PATH" ]]; then
   echo "バックグラウンドサービスを停止・削除しました。"
 fi
 
-read -r -p "設定・ログを含む $APP_DIR を完全に削除しますか？ [y/N]: " confirm
+if exec 3</dev/tty 2>/dev/null; then
+  exec 3<&-
+  read -r -p "設定・ログを含む $APP_DIR を完全に削除しますか？ [y/N]: " confirm < /dev/tty
+else
+  confirm="N"
+fi
 if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
   rm -rf "$APP_DIR"
   echo "$APP_DIR を削除しました。"
