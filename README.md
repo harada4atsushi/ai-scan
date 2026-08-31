@@ -20,7 +20,7 @@
 ## インストール（curl一発）
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/__GITHUB_OWNER__/__GITHUB_REPO__/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/harada4atsushi/ai-scan/main/install.sh | bash
 ```
 
 実行すると:
@@ -70,7 +70,7 @@ tail -f ~/.ai-scan/logs/stdout.log
 ## アンインストール
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/__GITHUB_OWNER__/__GITHUB_REPO__/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/harada4atsushi/ai-scan/main/uninstall.sh | bash
 ```
 
 サービスの停止・自動起動解除を行い、`~/.ai-scan` 一式（設定・ログ・仮想環境）を削除するか確認します。

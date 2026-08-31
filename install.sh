@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # One-shot installer for ai-scan.
-#   curl -fsSL https://raw.githubusercontent.com/__GITHUB_OWNER__/__GITHUB_REPO__/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/harada4atsushi/ai-scan/main/install.sh | bash
 set -euo pipefail
 
-GITHUB_OWNER="__GITHUB_OWNER__"
-GITHUB_REPO="__GITHUB_REPO__"
+GITHUB_OWNER="harada4atsushi"
+GITHUB_REPO="ai-scan"
 BRANCH="main"
 
 APP_DIR="$HOME/.ai-scan"

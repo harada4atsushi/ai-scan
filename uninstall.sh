@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Uninstaller for ai-scan.
-#   curl -fsSL https://raw.githubusercontent.com/__GITHUB_OWNER__/__GITHUB_REPO__/main/uninstall.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/harada4atsushi/ai-scan/main/uninstall.sh | bash
 set -euo pipefail
 
 APP_DIR="$HOME/.ai-scan"
