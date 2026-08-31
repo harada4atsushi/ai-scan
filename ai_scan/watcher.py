@@ -21,6 +21,9 @@ STABLE_POLL_INTERVAL_SEC = 1.0
 STABLE_CHECKS_REQUIRED = 2
 STABLE_WAIT_TIMEOUT_SEC = 600
 
+READ_RETRY_ATTEMPTS = 5
+READ_RETRY_DELAY_SEC = 2.0
+
 
 def setup_logging() -> logging.Logger:
     logging.basicConfig(
@@ -58,6 +61,34 @@ def _wait_until_stable(path: Path, logger: logging.Logger) -> bool:
         time.sleep(STABLE_POLL_INTERVAL_SEC)
     logger.warning("ファイルサイズの安定待ちがタイムアウトしました。処理を続行します: %s", path)
     return True
+
+
+def _read_file_robust(path: Path, logger: logging.Logger) -> bytes:
+    """Read the whole file, retrying on transient OSErrors.
+
+    Files inside iCloud Drive / Dropbox / OneDrive folders are managed by a
+    sync daemon that briefly holds a file-coordination lock; reading them
+    right as they finish appearing can raise OSError (e.g. errno 11,
+    "Resource deadlock avoided") even though the file is already complete.
+    A short retry clears this up without needing any cloud-provider-specific
+    API.
+    """
+    last_error: OSError | None = None
+    for attempt in range(1, READ_RETRY_ATTEMPTS + 1):
+        try:
+            return path.read_bytes()
+        except OSError as e:
+            last_error = e
+            logger.warning(
+                "ファイル読み込みに失敗（%d/%d回目。iCloud/Dropbox等の同期処理と競合した可能性）: %s (%s)",
+                attempt,
+                READ_RETRY_ATTEMPTS,
+                path,
+                e,
+            )
+            time.sleep(READ_RETRY_DELAY_SEC)
+    assert last_error is not None
+    raise last_error
 
 
 class PdfHandler(FileSystemEventHandler):
@@ -139,8 +170,14 @@ class PdfHandler(FileSystemEventHandler):
             return
 
         try:
+            data = _read_file_robust(path, logger)
+        except OSError:
+            logger.exception("ファイルの読み込みに失敗しました（リトライ上限到達）: %s", path)
+            return
+
+        try:
             markdown = convert_pdf_to_markdown(
-                path, self.config["gemini_api_key"], self.config.get("model", cfg.DEFAULT_MODEL)
+                data, path.name, self.config["gemini_api_key"], self.config.get("model", cfg.DEFAULT_MODEL)
             )
             output_path.write_text(markdown, encoding="utf-8")
             logger.info("解析完了・保存しました: %s", output_path)

@@ -1,6 +1,6 @@
 """Gemini-backed PDF -> Markdown(+LaTeX) conversion."""
+import io
 import time
-from pathlib import Path
 
 PROMPT = """あなたは文書解析の専門家です。添付されたPDFドキュメントの内容を余さず抽出し、Markdown形式のドキュメントに変換してください。
 
@@ -16,11 +16,19 @@ _ACTIVE_WAIT_TIMEOUT_SEC = 120
 _ACTIVE_POLL_INTERVAL_SEC = 2
 
 
-def convert_pdf_to_markdown(pdf_path: Path, api_key: str, model: str) -> str:
+def convert_pdf_to_markdown(data: bytes, filename: str, api_key: str, model: str) -> str:
     from google import genai
+    from google.genai import types
 
     client = genai.Client(api_key=api_key)
-    uploaded = client.files.upload(file=str(pdf_path))
+    # Upload from an in-memory buffer, not the file path: the caller has
+    # already read the bytes with retry handling for cloud-synced folders
+    # (iCloud Drive/Dropbox/OneDrive), and re-reading via a path here would
+    # risk hitting the same file-coordination lock again inside the SDK.
+    uploaded = client.files.upload(
+        file=io.BytesIO(data),
+        config=types.UploadFileConfig(mime_type="application/pdf", display_name=filename),
+    )
 
     deadline = time.time() + _ACTIVE_WAIT_TIMEOUT_SEC
     while uploaded.state.name == "PROCESSING" and time.time() < deadline:
