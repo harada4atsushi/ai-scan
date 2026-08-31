@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # One-shot installer for ai-scan.
-#   curl -fsSL https://raw.githubusercontent.com/harada4atsushi/ai-scan/main/install.sh | bash
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/harada4atsushi/ai-scan/main/install.sh)"
+#
+# Use the bash -c "$(...)" form, not `curl ... | install.sh`: this script
+# runs an interactive setup wizard, and piping into bash would leave the
+# wizard's stdin pointed at the tail of this very script instead of the
+# keyboard. bash -c "$(...)" fully captures curl's output first, so the
+# script runs with the real terminal as stdin.
 set -euo pipefail
 
 GITHUB_OWNER="harada4atsushi"
@@ -103,4 +109,4 @@ echo
 echo "ログ:            $LOG_DIR/stdout.log"
 echo "設定ファイル:      $APP_DIR/config.json"
 echo "設定変更後の反映:  launchctl kickstart -k gui/\$(id -u)/${LABEL}"
-echo "アンインストール:  curl -fsSL https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${BRANCH}/uninstall.sh | bash"
+echo "アンインストール:  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${BRANCH}/uninstall.sh)\""
