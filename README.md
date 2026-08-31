@@ -49,7 +49,9 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/harada4atsushi/ai-scan/m
 launchctl kickstart -k gui/$(id -u)/com.aiscan.watcher
 ```
 
-設定ファイル `~/.ai-scan/config.json` を直接編集することも可能です（`model` フィールドで使用するGeminiモデルも変更できます。デフォルトは `gemini-2.5-pro`）。
+設定ファイル `~/.ai-scan/config.json` を直接編集することも可能です（`model` フィールドで使用するGeminiモデルも変更できます）。
+
+デフォルトは低コストな `gemini-3.6-flash` です。無料枠ではPro系モデル（`gemini-*-pro`）は使えない（課金設定が必要）ため、精度を上げたい場合も、まず課金の有無を確認してから変更してください。Geminiのモデルは提供終了・置き換えが比較的頻繁にあるため、`model` を変更した際にエラーが出た場合は [Gemini APIのモデル一覧](https://ai.google.dev/gemini-api/docs/models) で現在利用可能なモデル名を確認してください。
 
 ## サービスの操作
 

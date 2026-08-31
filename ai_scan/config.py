@@ -10,7 +10,7 @@ APP_DIR = Path.home() / ".ai-scan"
 CONFIG_PATH = APP_DIR / "config.json"
 LOG_DIR = APP_DIR / "logs"
 
-DEFAULT_MODEL = "gemini-2.5-pro"
+DEFAULT_MODEL = "gemini-3.6-flash"
 DEFAULT_MAX_SIZE_MB = 10
 
 
